@@ -172,7 +172,7 @@ Selección en `src/api/index.ts`: la sesión es real siempre que estén `VITE_SU
 
 - Implementado: toda la interfaz `FinanceApi` y `auth.ts`. Migraciones en `supabase/migrations/`, seed local en `supabase/seed.sql` (usuario `demo@example.com`).
 - Probado en local (`supabase db reset` + pruebas SQL de reglas y RLS con dos usuarios + E2E de `src/api/supabase.ts`).
-- Pendiente de aplicar en el proyecto remoto: las migraciones posteriores a `profiles_and_accounts`.
+- Aplicado en el proyecto remoto (`urbpynuotkjyioblmtum`).
 
 ## Pendientes
 
