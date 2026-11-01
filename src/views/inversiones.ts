@@ -10,14 +10,13 @@ import { app } from '../ui/state';
 const openHistory = new Set<string>();
 
 export async function inversiones(root: HTMLElement) {
-  const [all, accounts, allAccounts] = await Promise.all([
+  const [all, accounts, allAccounts, net] = await Promise.all([
     api.listInvestments({ includeArchived: true }), api.listAccounts(), api.listAccounts({ includeArchived: true }),
+    api.getNetWorth(),
   ]);
   const list = all.filter(i => !i.archived);
   const archived = all.filter(i => i.archived);
-  const invested = list.reduce((s, i) => s + i.invested, 0);
-  const value = list.reduce((s, i) => s + i.currentValue, 0);
-  const gain = list.reduce((s, i) => s + i.gain, 0);
+  const { investmentsInvested: invested, investmentsTotal: value, investmentsGain: gain } = net;
   const ret = invested > 0 ? gain / invested : null;
   const where = (i: Investment) => {
     const a = allAccounts.find(x => x.id === i.accountId);

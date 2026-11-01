@@ -9,11 +9,14 @@ import { app } from '../ui/state';
 const personKey = (p: string) => p.trim().toLowerCase();
 
 export async function deudas(root: HTMLElement) {
-  const [debts, accounts, allAccounts] = await Promise.all([api.listDebts(), api.listAccounts(), api.listAccounts({ includeArchived: true })]);
+  const [debts, accounts, allAccounts, netWorth, debtPeople] = await Promise.all([
+    api.listDebts(), api.listAccounts(), api.listAccounts({ includeArchived: true }), api.getNetWorth(), api.listDebtPeople(),
+  ]);
   const active = debts.filter(d => !d.settled);
   const settled = debts.filter(d => d.settled);
-  const total = (dir: DebtDirection) => active.filter(d => d.direction === dir).reduce((s, d) => s + d.remaining, 0);
+  const total = (dir: DebtDirection) => (dir === 'owed_to_me' ? netWorth.owedToMe : netWorth.iOwe);
   const people = [...new Set(debts.map(d => d.person.trim()))];
+  const personTotals = (p: string) => debtPeople.find(x => personKey(x.person) === personKey(p));
   const accName = (id: string | null) => allAccounts.find(a => a.id === id)?.name;
 
   const debtRow = (d: Debt) => html`
@@ -38,14 +41,14 @@ export async function deudas(root: HTMLElement) {
     const byPerson = people.filter(p => list.some(d => personKey(d.person) === personKey(p)));
     return html`${byPerson.map(p => {
       const items = list.filter(d => personKey(d.person) === personKey(p));
-      const mine = active.filter(d => personKey(d.person) === personKey(p));
-      const both = mine.some(d => d.direction !== dir);
-      const net = mine.reduce((s, d) => s + (d.direction === 'owed_to_me' ? d.remaining : -d.remaining), 0);
+      const both = active.some(d => personKey(d.person) === personKey(p) && d.direction !== dir);
+      const totals = personTotals(p);
+      const net = totals?.net ?? 0;
       return html`<div class="person">
         <div class="row" style="padding-top:0">
           ${avatar(p)}
           <div class="grow"><strong>${p}</strong>${both ? html`<div class="label">Neto con ${p}: <span class="${cls(net)}">${signed(net)}</span></div>` : ''}</div>
-          <div class="num"><strong>${money(items.reduce((s, d) => s + d.remaining, 0))}</strong></div>
+          <div class="num"><strong>${money((dir === 'owed_to_me' ? totals?.owedToMe : totals?.iOwe) ?? 0)}</strong></div>
         </div>
         ${items.map(debtRow)}
       </div>`;

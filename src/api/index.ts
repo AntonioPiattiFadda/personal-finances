@@ -1,12 +1,13 @@
 // Único punto que elige la implementación: mock o Supabase. La UI solo importa de aquí.
 import * as supabaseAuth from './auth';
 import type { Session } from './auth';
-import { hasSupabaseConfig } from './client';
+import { hasSupabaseConfig, supabase } from './client';
 import { mockApi, mockAuth } from './mock';
-import { api as supabaseApi } from './supabase';
+import { createSupabaseApi } from './supabase';
 import type { FinanceApi } from './types';
 
 export type { Session } from './auth';
+export { getOAuthRequest, answerOAuthRequest, type OAuthRequest } from './oauth';
 export * from './types';
 
 export interface AuthApi {
@@ -22,5 +23,7 @@ export const usingMock = import.meta.env.VITE_USE_MOCK === 'true' || !hasSupabas
 /** La sesión es real siempre que haya Supabase configurado, aunque los datos sean del mock. */
 export const usingMockAuth = !hasSupabaseConfig;
 
-export const api: FinanceApi = usingMock ? mockApi : supabaseApi;
+export const api: FinanceApi = usingMock
+  ? mockApi
+  : createSupabaseApi(supabase, async () => (await supabase.auth.getUser()).data.user?.id ?? null);
 export const auth: AuthApi = usingMockAuth ? mockAuth : supabaseAuth;

@@ -59,7 +59,9 @@ export async function signIn(email: string): Promise<void> {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) throw new ApiError('El email no es válido');
   const { error } = await supabase.auth.signInWithOtp({
     email: clean,
-    options: { emailRedirectTo: window.location.origin + window.location.pathname },
+    // Con el query: la pantalla de consentimiento OAuth (/oauth/consent?authorization_id=…)
+    // tiene que volver al mismo pedido después del login.
+    options: { emailRedirectTo: window.location.origin + window.location.pathname + window.location.search },
   });
   if (error) {
     if (error.status === 429) throw new ApiError('Demasiados intentos. Espera un momento y vuelve a probar.', error.code);

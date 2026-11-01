@@ -30,7 +30,7 @@
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif; }
 
 /* Layout */
-.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.app { display: grid; grid-template-columns: 220px minmax(0,1fr); min-height: 100vh; }
 aside { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; position: sticky; top: 0; height: 100vh; }
 .brand { font-weight: 700; font-size: 18px; padding: 0 10px 18px; display: flex; gap: 8px; align-items: center; }
 .brand i { width: 28px; height: 28px; background: url('/favicon-64.png') center / contain no-repeat; display: inline-block; flex: none; }
@@ -70,7 +70,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 .login p { margin: 0; }
 
 @media (max-width: 680px) {
-  .app { grid-template-columns: 1fr; }
+  .app { grid-template-columns: minmax(0,1fr); }
   aside { position: fixed; bottom: 0; top: auto; left: 0; right: 0; height: auto; padding: 6px; border-right: 0; border-top: 1px solid var(--border); z-index: 10; }
   aside .brand { display: none; }
   nav { display: flex; overflow-x: auto; gap: 2px; }

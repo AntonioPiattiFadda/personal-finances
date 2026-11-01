@@ -6,6 +6,7 @@ import { errorMessage } from './ui/feedback'
 import { html } from './ui/html'
 import { app, type View } from './ui/state'
 import { renderLogin } from './views/login'
+import { OAUTH_CONSENT_PATH, renderOAuthConsent } from './views/oauth'
 import { resumen } from './views/resumen'
 import { gastos } from './views/gastos'
 import { fijos } from './views/fijos'
@@ -92,6 +93,11 @@ async function start(s: Session | null) {
   if (!session) {
     main = null
     renderLogin(root)
+    return
+  }
+  if (location.pathname === OAUTH_CONSENT_PATH) {
+    main = null
+    await renderOAuthConsent(root)
     return
   }
   app.email = session.email

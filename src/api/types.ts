@@ -14,9 +14,12 @@ export interface Contribution { id: string; investmentId: string; date: string; 
 export interface Valuation { id: string; investmentId: string; date: string; value: number }
 export interface Debt { id: string; person: string; direction: DebtDirection; amount: number; paid: number; remaining: number; settled: boolean; date: string; description: string }
 export interface DebtPayment { id: string; debtId: string; date: string; amount: number; accountId: string | null }
-export interface NetWorth { accountsTotal: number; investmentsTotal: number; owedToMe: number; iOwe: number; netWorth: number }
+export interface NetWorth { accountsTotal: number; investmentsTotal: number; investmentsInvested: number; investmentsGain: number; owedToMe: number; iOwe: number; netWorth: number }
 export interface MoneyByLocation { accountId: string | null; name: string; type: AccountType | null; cash: number; investments: number; total: number }
 export interface TagTotal { tagId: string | null; tagName: string; tagColor: string | null; total: number; count: number }
+export interface TagUsage { tagId: string; name: string; color: string; expenseCount: number; recurringCount: number; expenseTotal: number }
+export interface MonthSummary { month: string /* YYYY-MM-01 */; fixedIncome: number; fixedExpense: number; available: number; variableTotal: number; variableCount: number; remaining: number }
+export interface DebtPerson { person: string; owedToMe: number; iOwe: number; net: number }
 
 export interface ExpenseInput { date: string; amount: number; description: string; accountId: string | null; tagIds: string[]; deduct: boolean }
 export interface ExpenseFilter { month?: string /* YYYY-MM */; tagId?: string | null /* null = sin etiqueta */; accountId?: string }
@@ -33,6 +36,7 @@ export interface FinanceApi {
   createTag(name: string, color: string): Promise<Tag>;
   updateTag(id: string, patch: Partial<Pick<Tag, 'name' | 'color'>>): Promise<void>;
   deleteTag(id: string): Promise<void>;
+  listTagUsage(): Promise<TagUsage[]>; // orden: nombre
 
   // cuentas
   listAccounts(opts?: { includeArchived?: boolean }): Promise<Account[]>;
@@ -73,10 +77,12 @@ export interface FinanceApi {
   listDebtPayments(debtId: string): Promise<DebtPayment[]>;
   addDebtPayment(debtId: string, input: { date: string; amount: number; accountId: string | null }): Promise<string>;
   deleteDebtPayment(id: string): Promise<void>;
+  listDebtPeople(): Promise<DebtPerson[]>; // solo personas con algo pendiente; orden: |net| desc
 
   // resumen
   getNetWorth(): Promise<NetWorth>;
-  getMoneyByLocation(): Promise<MoneyByLocation[]>;
+  getMoneyByLocation(): Promise<MoneyByLocation[]>; // orden: total desc
+  getMonthSummary(month: string /* YYYY-MM */): Promise<MonthSummary>;
 }
 
 export class ApiError extends Error {

@@ -7,10 +7,10 @@ import { html } from '../ui/html';
 import { app } from '../ui/state';
 
 export async function etiquetas(root: HTMLElement) {
-  const [tags, expenses, recurring] = await Promise.all([api.listTags(), api.listExpenses(), api.listRecurring()]);
+  const [tags, usageRows] = await Promise.all([api.listTags(), api.listTagUsage()]);
   const usage = (id: string) => {
-    const list = expenses.filter(e => e.tagIds.includes(id));
-    return { count: list.length, total: list.reduce((s, e) => s + e.amount, 0), fixed: recurring.filter(r => r.tagIds.includes(id)).length };
+    const u = usageRows.find(r => r.tagId === id);
+    return { count: u?.expenseCount ?? 0, total: u?.expenseTotal ?? 0, fixed: u?.recurringCount ?? 0 };
   };
 
   root.innerHTML = html`

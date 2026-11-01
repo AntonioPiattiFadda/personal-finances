@@ -74,7 +74,7 @@ dialog::backdrop { background: rgba(10,12,16,.45); }
 
 @media (max-width: 900px) {
   .g4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .g3, .g2, .side-layout { grid-template-columns: 1fr; }
+  .g3, .g2, .side-layout { grid-template-columns: minmax(0,1fr); }
   form .fields { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 680px) {

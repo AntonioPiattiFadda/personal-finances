@@ -18,13 +18,16 @@ export async function gastos(root: HTMLElement) {
   if (state.account) filter.accountId = state.account;
   const filtered = Boolean(state.tag || state.account);
 
-  const [tags, accounts, allAccounts, list, monthList, byTag] = await Promise.all([
+  const [tags, accounts, allAccounts, list, summary, unfiltered, byTag] = await Promise.all([
     api.listTags(), api.listAccounts(), api.listAccounts({ includeArchived: true }), api.listExpenses(filter),
-    filtered ? api.listExpenses(state.month ? { month: state.month } : {}) : Promise.resolve(null),
+    state.month ? api.getMonthSummary(state.month) : Promise.resolve(null),
+    !state.month && filtered ? api.listExpenses() : Promise.resolve(null),
     state.month ? api.expensesByTag(state.month) : Promise.resolve(null),
   ]);
-  const periodList = monthList ?? list;
-  const periodTotal = periodList.reduce((s, e) => s + e.amount, 0);
+  // Total del periodo: del mes lo da la API; sin mes, es la suma de todos los gastos.
+  const allTime = unfiltered ?? list;
+  const periodTotal = summary?.variableTotal ?? allTime.reduce((s, e) => s + e.amount, 0);
+  const periodCount = summary?.variableCount ?? allTime.length;
   const listTotal = list.reduce((s, e) => s + e.amount, 0);
   const accName = (id: string | null) => allAccounts.find(a => a.id === id)?.name ?? '—';
 
@@ -90,7 +93,7 @@ export async function gastos(root: HTMLElement) {
         <section class="card">
           <div class="label">${state.month ? `Total ${monthLabel(state.month).toLowerCase()}` : 'Total'}</div>
           <div class="big" style="font-size:28px">${money(periodTotal)}</div>
-          <div class="label" style="margin-bottom:8px">${periodList.length} ${periodList.length === 1 ? 'gasto' : 'gastos'}</div>
+          <div class="label" style="margin-bottom:8px">${periodCount} ${periodCount === 1 ? 'gasto' : 'gastos'}</div>
           ${byTag ? tagBars(byTag) : html`<p class="note">Elige un mes para ver los totales por etiqueta.</p>`}
         </section>
       </div>

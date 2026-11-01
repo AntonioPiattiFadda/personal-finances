@@ -1,20 +1,26 @@
 import { api } from '../api';
 import type { Account, Frequency, RecurringItem, RecurringKind, Tag } from '../api/types';
 import { accountOptions, bindTagPicker, empty, header, pickedTags, randomTagColor, tagChips, tagPicker } from '../ui/components';
-import { amountInput, date, FREQUENCIES, money, parseAmount, thisMonth } from '../ui/format';
+import { amountInput, date, FREQUENCIES, money, parseAmount, signed, thisMonth } from '../ui/format';
 import { confirmDialog, errorMessage, formDialog, run, toast } from '../ui/feedback';
 import { html } from '../ui/html';
 import { app } from '../ui/state';
-import { activeInMonth } from './resumen';
+
+/** Activo y vigente en algún momento del mes (YYYY-MM): solo para marcar la fila. */
+function activeInMonth(r: RecurringItem, month: string) {
+  const [y, m] = month.split('-').map(Number);
+  const first = `${month}-01`;
+  const last = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
+  return r.active && (!r.startDate || r.startDate <= last) && (!r.endDate || r.endDate >= first);
+}
 
 export async function fijos(root: HTMLElement) {
-  const [items, tags, accounts, allAccounts] = await Promise.all([
-    api.listRecurring(), api.listTags(), api.listAccounts(), api.listAccounts({ includeArchived: true }),
-  ]);
   const month = thisMonth();
-  const current = items.filter(r => activeInMonth(r, month));
-  const fixedIn = current.filter(r => r.kind === 'income').reduce((s, r) => s + r.monthlyAmount, 0);
-  const fixedOut = current.filter(r => r.kind === 'expense').reduce((s, r) => s + r.monthlyAmount, 0);
+  const [items, tags, accounts, allAccounts, summary] = await Promise.all([
+    api.listRecurring(), api.listTags(), api.listAccounts(), api.listAccounts({ includeArchived: true }),
+    api.getMonthSummary(month),
+  ]);
+  const { fixedIncome: fixedIn, fixedExpense: fixedOut } = summary;
   const accName = (id: string | null) => allAccounts.find(a => a.id === id)?.name ?? '';
 
   const table = (kind: RecurringKind) => {
@@ -43,9 +49,9 @@ export async function fijos(root: HTMLElement) {
     ${header('Ingresos y gastos fijos', 'Lo que entra y sale todos los meses (o cada tanto)', html`<button class="btn" data-new>+ Nuevo fijo</button>`)}
     <div class="stack">
       <div class="grid g3">
-        <div class="card stat"><div class="label">Ingresos fijos / mes</div><div class="v pos">+${money(fixedIn)}</div></div>
-        <div class="card stat"><div class="label">Gastos fijos / mes</div><div class="v neg">−${money(fixedOut)}</div></div>
-        <div class="card stat"><div class="label">Disponible para variables</div><div class="v ${fixedIn - fixedOut < 0 ? 'neg' : ''}">${money(fixedIn - fixedOut)}</div><div class="label">${money((fixedIn - fixedOut) * 12)} al año</div></div>
+        <div class="card stat"><div class="label">Ingresos fijos / mes</div><div class="v pos">${signed(fixedIn)}</div></div>
+        <div class="card stat"><div class="label">Gastos fijos / mes</div><div class="v neg">${signed(-fixedOut)}</div></div>
+        <div class="card stat"><div class="label">Disponible para variables</div><div class="v ${summary.available < 0 ? 'neg' : ''}">${money(summary.available)}</div><div class="label">${money(summary.available * 12)} al año</div></div>
       </div>
       <section class="card"><h2>💰 Ingresos</h2>${table('income')}</section>
       <section class="card"><h2>🧾 Gastos fijos</h2>${table('expense')}</section>
