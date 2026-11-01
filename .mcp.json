@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?features=database,development,docs,debugging,account"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
+    },
+    "personal-finances": {
+      "type": "http",
+      "url": "https://personal-finances-seven-eta.vercel.app/api/mcp"
+    }
+  }
+}
